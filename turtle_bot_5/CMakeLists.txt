@@ -11,16 +11,26 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
+
 find_package(ament_index_cpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Widgets)
 find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
+
 find_package(rclcpp_action REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 
 include_directories(include ${Qt5Widgets_INCLUDE_DIRS})
+ 
+# Install Python executables
+install(PROGRAMS
+  src/turtle_bot_interface.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 set(dependencies "ament_index_cpp" "geometry_msgs" "rclcpp" "rclcpp_action" "std_msgs" "std_srvs")
 
