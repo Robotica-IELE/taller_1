@@ -70,7 +70,8 @@ class VentanaTurtleBot(Thread):
         canvas.get_tk_widget().pack(padx=2, pady=2, expand=1, fill='both')
 
         # Bottom
-        Button(frame_buttton, text='Detener', width=15, bg='white', fg='black', font='Helvetica 12 bold', command=self.b).pack(pady=5, side='left', expand=1)
+        Button(frame_buttton, text='Detener', width=15, bg='white', fg='black', font='Helvetica 12 bold', command=self.detener).pack(pady=5, side='left', expand=1)
+        Button(frame_buttton, text='Reanudar', width=15, bg='white', fg='black', font='Helvetica 12 bold', command=self.reanudar).pack(pady=5, side='left', expand=1)
         Label(frame_buttton, text="Grupo 5 - Robótica IELE 3338", bg="white", font='Helvetica 12 bold').pack(pady=5, side='left', expand=1)
         Button(frame_buttton, text='Guardar', width=15, bg='white', fg='black', font='Helvetica 12 bold', command=self.guardar).pack(pady=5, side='left', expand=1)
 
@@ -95,8 +96,12 @@ class VentanaTurtleBot(Thread):
     def guardar(self):
         print("bbbbbbbbbbbbb")
 
-    def c(self):
-        print("ccccccccccccc")
+    def detener(self):
+        ani.event_source.stop()
+        
+
+    def reanudar(self):
+        ani.event_source.start()
 
 def main(args=None):
     rclpy.init(args=args)
