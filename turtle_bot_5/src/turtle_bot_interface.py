@@ -27,13 +27,16 @@ class MinimalSubscriber(Node, Thread):
         super().__init__('turtle_bot_interface')
         self.subscription = self.create_subscription(
             Twist,
-            '/turtle1/cmd_vel',
+            '/turtlebot_position',
             self.listener_callback,
             10)
         self.subscription  # prevent unused variable warning
 
     def listener_callback(self, msg):
-        self.get_logger().info('I heard: "%s"' % msg)
+        xdata.append(msg.linear.x)
+        ydata.append(msg.linear.y)
+        self.get_logger().info('xdata:: "%s"' % xdata)
+        self.get_logger().info('ydata:: "%s"' % ydata)
 
     def run(self):
         rclpy.spin(self)
@@ -69,25 +72,27 @@ class VentanaTurtleBot(Thread):
         # Bottom
         Button(frame_buttton, text='Detener', width=15, bg='white', fg='black', font='Helvetica 12 bold', command=self.b).pack(pady=5, side='left', expand=1)
         Label(frame_buttton, text="Grupo 5 - Robótica IELE 3338", bg="white", font='Helvetica 12 bold').pack(pady=5, side='left', expand=1)
-        Button(frame_buttton, text='Guardar', width=15, bg='white', fg='black', font='Helvetica 12 bold', command=self.c).pack(pady=5, side='left', expand=1)
+        Button(frame_buttton, text='Guardar', width=15, bg='white', fg='black', font='Helvetica 12 bold', command=self.guardar).pack(pady=5, side='left', expand=1)
 
 
         self.root.mainloop()
 
     def animate(self, i):
-        line, = ax.plot(x, np.sin(x), color='m', marker='o', linestyle='dotted', linewidth=5, markersize=1, markeredgecolor='m')
-        line.set_ydata(np.sin(x+i/40))
+        line, = ax.plot(x, np.sin(x), color='m', linewidth=3, markersize=1, markeredgecolor='m')
+        line.set_data(xdata, ydata)
         return line,
 
     def init(self, titulo):
         print(titulo)
         global ani 
         plt.title(titulo, color='black', size=16)
+        ax.set_xlim(-2.3, 2.3)
+        ax.set_ylim(-2.3, 2.3)
         ani = animation.FuncAnimation(fig, self.animate, interval=20, blit=True, save_count=10)
         canvas.draw()
 
 
-    def b(self):
+    def guardar(self):
         print("bbbbbbbbbbbbb")
 
     def c(self):
