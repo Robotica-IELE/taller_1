@@ -21,8 +21,9 @@ xdata, ydata = [],[]
 
 
 
-class MinimalSubscriber(Node):
+class MinimalSubscriber(Node, Thread):
     def __init__(self):
+        Thread.__init__(self)
         super().__init__('turtle_bot_interface')
         self.subscription = self.create_subscription(
             Twist,
@@ -34,11 +35,12 @@ class MinimalSubscriber(Node):
     def listener_callback(self, msg):
         self.get_logger().info('I heard: "%s"' % msg)
 
+    def run(self):
+        rclpy.spin(self)
+
 class VentanaTurtleBot(Thread):
 
     def __init__(self, root):
-        Thread.__init__(self)
-
         # Configuración inicial root
         self.root = root
         self.root.geometry("800x800")
@@ -91,22 +93,17 @@ class VentanaTurtleBot(Thread):
     def c(self):
         print("ccccccccccccc")
 
-    def run(self):
-        while True:
-            sleep(1)
-            print("xd")
-
 def main(args=None):
     rclpy.init(args=args)
 
     # Thread encargado de la interfaz
-    root = Tk()
-    thread_plot = VentanaTurtleBot(root)
-    thread_plot.start()
 
     # Proceso principal encargado de recibir las posiciones "(x, y)"
     minimal_subscriber= MinimalSubscriber()
-    rclpy.spin(minimal_subscriber)
+    minimal_subscriber.start()
+
+    root = Tk()
+    thread_plot = VentanaTurtleBot(root)
 
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
