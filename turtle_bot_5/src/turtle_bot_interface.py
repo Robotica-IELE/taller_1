@@ -4,13 +4,22 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist 
 
-from tkinter import Tk, Label, Button
+from time import sleep
+from tkinter import Tk, Label, Button, Frame, Entry
 import tkinter
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 import numpy as np
-from pandas import pandass
 from threading import Thread
+
+
+fig, ax = plt.subplots(facecolor="#e5e5e5")
+x = np.arange(0, 4*np.pi, 0.01)
+
+xdata, ydata = [],[] 
+
+
 
 class MinimalSubscriber(Node):
     def __init__(self):
@@ -25,56 +34,78 @@ class MinimalSubscriber(Node):
     def listener_callback(self, msg):
         self.get_logger().info('I heard: "%s"' % msg)
 
-class VentanaTurtleBot:
-    def __init__(self, master):
-        self.master = master
-        master.geometry("800x500")
-        master.configure(bg="#1AA7EC")
-        master.title("Interzas TurtleBot")
+class VentanaTurtleBot(Thread):
 
-        titulo = tkinter.StringVar()  # Atributo titulo para usar en gráfica
+    def __init__(self, root):
+        Thread.__init__(self)
 
-        self.name = Label(master, text="Nombre de la gráfica:",background="#1AA7EC").grid(row=2, column=0)
-        self.e1 = tkinter.Entry(master, textvariable=titulo).grid(row=2, column=1)
+        # Configuración inicial root
+        self.root = root
+        self.root.geometry("800x800")
+        self.root.title("Interfaz TurtleBot")
+        self.root.minsize(width=800, height=800)
+        self.root.resizable(False, False)
 
-        # -------------
-        self.botonNombreGrafica = Button(master, text="Seleccione título", bg='#ffb3fe',
-                                         command=lambda: self.seleccione(titulo))
-        self.botonNombreGrafica.grid(row=2, column=2)
-        ##
-        self.botonGuardar = Button(master, text="Guardar", bg='#99FF99', command=self.guardar)
-        self.botonGuardar.grid(row=2, column=5)
+        # Configuración frame 
+        frame_top= Frame(self.root, bg='white', bd=3)
+        frame_top.pack(fill='both')
+        
+        frame_buttton = Frame(self.root, bg='white', bd=3)
+        frame_buttton.pack(expand=1, fill='both')
 
-    def guardar(self):
-        direccion = filedialog.askopenfilename()
-        print("Entra para guardar archivo")
+        # Top   
+        Label(frame_top, text="Nombre de la gráfica:",bg="white", font='Helvetica 12 bold').pack(pady=5, side='left', expand=1)
+        titulo = tkinter.StringVar(self.root, value='')
+        Entry(frame_top, textvariable=titulo, width=40).pack(pady=5, side='left', expand=1)
+        Button(frame_top, text='Empezar', width=15, bg='white', fg='black', font='Helvetica 12 bold', command=lambda: self.init(titulo.get())).pack(pady=5, side='left', expand=1)
 
-    def seleccione(self, til):
-        fig = Figure(figsize=(5, 4), dpi=100)
-        axis = fig.add_subplot(111)
-        axis.set_title(til.get())
-        lista = np.random.randint(0,10,size=20)
-        t = np.arange(0, 10, .5)
-        axis.plot(t,lista)  # AÑADIR "subplot"
+        # Center
+        global canvas 
+        canvas = FigureCanvasTkAgg(fig, master=frame_buttton)
+        canvas.get_tk_widget().pack(padx=2, pady=2, expand=1, fill='both')
 
-        axis.set_ylabel('Y (m)')
-        axis.set_xlabel('X (m)')
+        # Bottom
+        Button(frame_buttton, text='Detener', width=15, bg='white', fg='black', font='Helvetica 12 bold', command=self.b).pack(pady=5, side='left', expand=1)
+        Label(frame_buttton, text="Grupo 5 - Robótica IELE 3338", bg="white", font='Helvetica 12 bold').pack(pady=5, side='left', expand=1)
+        Button(frame_buttton, text='Guardar', width=15, bg='white', fg='black', font='Helvetica 12 bold', command=self.c).pack(pady=5, side='left', expand=1)
 
-        canvas = FigureCanvasTkAgg(fig, master=root)  # CREAR AREA DE DIBUJO DE TKINTER.
+
+        self.root.mainloop()
+
+    def animate(self, i):
+        line, = ax.plot(x, np.sin(x), color='m', marker='o', linestyle='dotted', linewidth=5, markersize=1, markeredgecolor='m')
+        line.set_ydata(np.sin(x+i/40))
+        return line,
+
+    def init(self, titulo):
+        print(titulo)
+        global ani 
+        plt.title(titulo, color='black', size=16)
+        ani = animation.FuncAnimation(fig, self.animate, interval=20, blit=True, save_count=10)
         canvas.draw()
-        canvas.get_tk_widget().grid(row=3, column=1)
-        print("Entro para accionar")
+
+
+    def b(self):
+        print("bbbbbbbbbbbbb")
+
+    def c(self):
+        print("ccccccccccccc")
+
+    def run(self):
+        while True:
+            sleep(1)
+            print("xd")
 
 def main(args=None):
     rclpy.init(args=args)
 
-    
+    # Thread encargado de la interfaz
     root = Tk()
-    miVentana = VentanaTurtleBot(root)
-    root.mainloop()
+    thread_plot = VentanaTurtleBot(root)
+    thread_plot.start()
 
-    minimal_subscriber = MinimalSubscriber()
-
+    # Proceso principal encargado de recibir las posiciones "(x, y)"
+    minimal_subscriber= MinimalSubscriber()
     rclpy.spin(minimal_subscriber)
 
     # Destroy the node explicitly
@@ -82,7 +113,6 @@ def main(args=None):
     # when the garbage collector destroys the node object)
     minimal_subscriber.destroy_node()
     rclpy.shutdown()
-
 
 if __name__ == '__main__':
     main()
