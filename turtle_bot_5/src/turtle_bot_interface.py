@@ -94,7 +94,11 @@ class VentanaTurtleBot(Thread):
 
 
     def guardar(self):
-        print("bbbbbbbbbbbbb")
+        for item in canvas.get_tk_widget().find_all():
+            canvas.get_tk_widget().delete(item)
+        plt.plot(xdata, ydata, color='m', linewidth=3, markersize=1, markeredgecolor='m')
+        plt.show()
+        
 
     def detener(self):
         ani.event_source.stop()
