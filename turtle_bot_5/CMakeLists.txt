@@ -26,6 +26,40 @@ find_package(std_srvs REQUIRED)
 
 include_directories(include ${Qt5Widgets_INCLUDE_DIRS})
  
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/Bool.msg"
+  "msg/Byte.msg"
+  "msg/ByteMultiArray.msg"
+  "msg/Char.msg"
+  "msg/Empty.msg"
+  "msg/Float32.msg"
+  "msg/Float32MultiArray.msg"
+  "msg/Float64.msg"
+  "msg/Float64MultiArray.msg"
+  "msg/Int16.msg"
+  "msg/Int16MultiArray.msg"
+  "msg/Int32.msg"
+  "msg/Int32MultiArray.msg"
+  "msg/Int64.msg"
+  "msg/Int64MultiArray.msg"
+  "msg/Int8.msg"
+  "msg/Int8MultiArray.msg"
+  "msg/MultiArrayDimension.msg"
+  "msg/MultiArrayLayout.msg"
+  "msg/String.msg"
+  "msg/UInt16.msg"
+  "msg/UInt16MultiArray.msg"
+  "msg/UInt32.msg"
+  "msg/UInt32MultiArray.msg"
+  "msg/UInt64.msg"
+  "msg/UInt64MultiArray.msg"
+  "msg/UInt8.msg"
+  "msg/UInt8MultiArray.msg"
+  "msg/WString.msg"
+  "srv/DoPath.srv"
+  "srv/SavePath.srv"
+)
+
 # Install Python executables
 install(PROGRAMS
   src/turtle_bot_interface.py
@@ -33,6 +67,9 @@ install(PROGRAMS
 )
 
 set(dependencies "ament_index_cpp" "geometry_msgs" "rclcpp" "rclcpp_action" "std_msgs" "std_srvs")
+
+rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}" "rosidl_typesupport_cpp")
+
 
 add_executable(turtle_bot_teleop src/turtle_bot_teleop.cpp)
 ament_target_dependencies(turtle_bot_teleop ${dependencies})

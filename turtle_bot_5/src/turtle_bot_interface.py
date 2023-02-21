@@ -24,6 +24,7 @@ xdata, ydata = [],[]
 class MinimalSubscriber(Node, Thread):
     def __init__(self):
         Thread.__init__(self)
+        self.cli = self.create_client(AddTwoInts, 'add_two_ints')
         super().__init__('turtle_bot_interface')
         self.subscription = self.create_subscription(
             Twist,
@@ -31,6 +32,12 @@ class MinimalSubscriber(Node, Thread):
             self.listener_callback,
             10)
         self.subscription  # prevent unused variable warning
+
+    @staticmethod
+    def send_request(self):
+        self.future = self.cli.call_async(self.req)
+        rclpy.spin_until_future_complete(self, self.future)
+        return self.future.result()
 
     def listener_callback(self, msg):
         xdata.append(msg.linear.x)
@@ -85,6 +92,7 @@ class VentanaTurtleBot(Thread):
         return line,
 
     def init(self, titulo):
+        messagebox.askyesnocancel(message="¿Desea guadar el recorrdio?", title="Interfaz TurtleBot")
         global ani 
         plt.title(titulo.get(), color='black', size=16)
         plt.xlabel("Posición x [m]", fontsize=12)
@@ -113,6 +121,7 @@ class VentanaTurtleBot(Thread):
             canvas.get_tk_widget().delete(item)
         plt.plot(xdata, ydata, color='m', linewidth=3, markersize=1, markeredgecolor='m')
         plt.show()
+        response = minimal_client.send_request(self.minimal_subscriber)
         self.salir()
 
     def salir(self):

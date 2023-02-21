@@ -6,6 +6,7 @@
 #include <rclcpp_action/rclcpp_action.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 
+
 #include <signal.h>
 #include <stdio.h>
 #ifdef _WIN32
@@ -15,6 +16,8 @@
 # include <unistd.h>
 #endif
 
+#include "turtle_bot_5/srv/save_path.hpp"
+#include "turtle_bot_5/msg/int32_multi_array.hpp"
 
 static constexpr char KEYCODE_RIGHT = 0x43;
 static constexpr char KEYCODE_LEFT = 0x44;
@@ -23,6 +26,9 @@ static constexpr char KEYCODE_DOWN = 0x42;
 static constexpr char KEYCODE_Q = 0x71;
 
 bool running = true;
+
+turtle_bot_5::msg::Int32MultiArray res;
+
 
 class KeyboardReader final
 {
@@ -142,16 +148,15 @@ private:
 class TurtleBotTeleop final
 {
 public:
-  TurtleBotTeleop()
+  TurtleBotTeleop(rclcpp::Node::SharedPtr nh)
   {
-    nh_ = rclcpp::Node::make_shared("turtle_bot_teleop");
+    rclcpp::Node::SharedPtr nh_ = nh;
     twist_pub_ = nh_->create_publisher<geometry_msgs::msg::Twist>("turtlebot_cmdVel", 1);
   }
 
   int keyLoop(float p_linear, float p_angular)
   {
     char c;
-    std::thread{std::bind(&TurtleBotTeleop::spin, this)}.detach();
 
     puts("---------------------------");
     puts("\nReading from keyboard");
@@ -169,15 +174,19 @@ public:
       {
       case KEYCODE_LEFT:
         angular = p_angular;
+        res.data.push_back(4);
         break;
       case KEYCODE_RIGHT:
         angular = -p_angular;
+        res.data.push_back(3);
         break;
       case KEYCODE_UP:
         linear = p_linear;
+        res.data.push_back(1);
         break;
       case KEYCODE_DOWN:
         linear = -p_linear;
+        res.data.push_back(2);
         break;
       case KEYCODE_Q:
         running = false;
@@ -203,11 +212,6 @@ public:
   }
 
 private:
-  void spin()
-  {
-    rclcpp::spin(nh_);
-  }
-  rclcpp::Node::SharedPtr nh_;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr twist_pub_;
   KeyboardReader input_;
 };
@@ -227,15 +231,17 @@ void quit(int sig)
 }
 #endif
 
-int main(int argc, char** argv)
+void sendPath(const std::shared_ptr<turtle_bot_5::srv::SavePath::Request> request,
+          std::shared_ptr<turtle_bot_5::srv::SavePath::Response> response)
+  {
+    response-> path = res;
+  }
+
+int main(int argc, char **argv)
 {
   rclcpp::init(argc, argv);
 
-#ifdef _WIN32
-  SetConsoleCtrlHandler(quit, TRUE);
-#else
-  signal(SIGINT, quit);
-#endif
+  std::shared_ptr<rclcpp::Node> node = rclcpp::Node::make_shared("turtle_bot_teleop");
 
   float linear;
   float angular;
@@ -246,8 +252,19 @@ int main(int argc, char** argv)
   printf("Input the angular velocity: ");
   scanf("%f", &angular);
 
-  TurtleBotTeleop teleop_turtle;
+  TurtleBotTeleop teleop_turtle(node);
+
+  res.data.clear();
+
 
   teleop_turtle.keyLoop(linear, angular);
+
+  rclcpp::Service<turtle_bot_5::srv::SavePath>::SharedPtr service =
+    node->create_service<turtle_bot_5::srv::SavePath>("save_path", &sendPath);
+
+  RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Ready to add two ints.");
+
+  rclcpp::spin(node);
   rclcpp::shutdown();
+
 }
