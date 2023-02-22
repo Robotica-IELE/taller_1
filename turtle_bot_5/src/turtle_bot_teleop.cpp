@@ -192,6 +192,7 @@ public:
         running = false;
         break;
       default:
+        res.data.push_back(0);
         break;
       }
 
@@ -231,7 +232,7 @@ void quit(int sig)
 }
 #endif
 
-void sendPath(const std::shared_ptr<turtle_bot_5::srv::SavePath::Request> request,
+void sendPath(const std::shared_ptr<turtle_bot_5::srv::SavePath::Request>,
           std::shared_ptr<turtle_bot_5::srv::SavePath::Response> response)
   {
     response-> path = res;
@@ -256,16 +257,14 @@ int main(int argc, char **argv)
 
   res.data.clear();
   res.data.push_back(linear);
-  res.data.push_back(1angular);
+  res.data.push_back(angular);
 
   teleop_turtle.keyLoop(linear, angular);
 
   rclcpp::Service<turtle_bot_5::srv::SavePath>::SharedPtr service =
     node->create_service<turtle_bot_5::srv::SavePath>("save_path", &sendPath);
 
-  RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Ready to add two ints.");
-
-  rclcpp::spin(node);
+  RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Finished");
   rclcpp::shutdown();
 
 }
