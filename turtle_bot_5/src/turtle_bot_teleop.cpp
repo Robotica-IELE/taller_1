@@ -265,6 +265,8 @@ int main(int argc, char **argv)
     node->create_service<turtle_bot_5::srv::SavePath>("save_path", &sendPath);
 
   RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Finished");
+
+  rclcpp::spin(node);
   rclcpp::shutdown();
 
 }
