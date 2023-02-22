@@ -3,9 +3,11 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist 
+import os
 
 from time import sleep
-from tkinter import Tk, Label, Button, Frame, Entry
+from tkinter import Tk, Label, Button, Frame, Entry, messagebox,filedialog
+from turtle_bot_5.srv import SavePath
 import tkinter
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
@@ -15,38 +17,51 @@ from threading import Thread
 from matplotlib.ticker import AutoMinorLocator
 
 fig, ax = plt.subplots(facecolor="#e5e5e5")
-x = np.arange(0, 4*np.pi, 0.01)
 
 xdata, ydata = [],[] 
-
+value = False
+salir = False
 
 
 class MinimalSubscriber(Node, Thread):
     def __init__(self):
         Thread.__init__(self)
-        self.cli = self.create_client(AddTwoInts, 'add_two_ints')
         super().__init__('turtle_bot_interface')
         self.subscription = self.create_subscription(
             Twist,
             '/turtlebot_position',
             self.listener_callback,
             10)
-        self.subscription  # prevent unused variable warning
-
-    @staticmethod
-    def send_request(self):
-        self.future = self.cli.call_async(self.req)
-        rclpy.spin_until_future_complete(self, self.future)
-        return self.future.result()
+        self.save_path_srv = self.create_client(SavePath, 'save_path')
 
     def listener_callback(self, msg):
+        global value
+
         xdata.append(msg.linear.x)
         ydata.append(msg.linear.y)
         self.get_logger().info('xdata:: "%s"' % xdata)
         self.get_logger().info('ydata:: "%s"' % ydata)
+        
+        if(value):
+            print(value)
+            
+    def get_save_path(self):
+        self.future = self.save_path_srv.call_async(self.req)
+        rclpy.spin_until_future_complete(self, self.future)
+        return self.future.result()
 
     def run(self):
-        rclpy.spin(self)
+        global salir 
+
+        while(not salir):
+            rclpy.spin_once(self)
+            print("-----------------------------------")
+        
+        while not self.save_path_srv.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info('Press Q in the teleop console')
+        self.req = SavePath.Request()
+        response = self.get_save_path()
+        print(response)
 
 class VentanaTurtleBot(Thread):
 
@@ -87,13 +102,14 @@ class VentanaTurtleBot(Thread):
         self.root.mainloop()
 
     def animate(self, i):
-        line, = ax.plot(x, np.sin(x), color='m', linewidth=3, markersize=1, markeredgecolor='m')
-        line.set_data(xdata, ydata)
+        line, = ax.plot(xdata, ydata, color='m', linewidth=3, markersize=1, markeredgecolor='m')
         return line,
 
     def init(self, titulo):
-        messagebox.askyesnocancel(message="¿Desea guadar el recorrdio?", title="Interfaz TurtleBot")
         global ani 
+        global value
+
+        value = messagebox.askyesnocancel(message="¿Desea guardar la trayectoria del robot?", title="Interfaz TurtleBot")
         plt.title(titulo.get(), color='black', size=16)
         plt.xlabel("Posición x [m]", fontsize=12)
         plt.ylabel("Posición y [m]", fontsize=12)
@@ -117,11 +133,20 @@ class VentanaTurtleBot(Thread):
         canvas.draw()
 
     def guardar(self):
+        global salir 
+        
+        salir = True
         for item in canvas.get_tk_widget().find_all():
             canvas.get_tk_widget().delete(item)
         plt.plot(xdata, ydata, color='m', linewidth=3, markersize=1, markeredgecolor='m')
         plt.show()
-        response = minimal_client.send_request(self.minimal_subscriber)
+
+        ruta = filedialog.askdirectory()
+        if ruta != "":
+            os.chdir(ruta)
+        nuevaRuta = os.getcwd()
+        print(ruta)
+
         self.salir()
 
     def salir(self):
@@ -149,8 +174,11 @@ def main(args=None):
     thread_plot = VentanaTurtleBot(root, minimal_subscriber)
 
     
+
+    
     # (optional - otherwise it will be done automatically
     # when the garbage collector destroys the node object)
 
 if __name__ == '__main__':
     main()
+

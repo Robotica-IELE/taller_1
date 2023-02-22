@@ -17,7 +17,7 @@
 #endif
 
 #include "turtle_bot_5/srv/save_path.hpp"
-#include "turtle_bot_5/msg/int32_multi_array.hpp"
+#include "turtle_bot_5/msg/float32_multi_array.hpp"
 
 static constexpr char KEYCODE_RIGHT = 0x43;
 static constexpr char KEYCODE_LEFT = 0x44;
@@ -27,7 +27,7 @@ static constexpr char KEYCODE_Q = 0x71;
 
 bool running = true;
 
-turtle_bot_5::msg::Int32MultiArray res;
+turtle_bot_5::msg::Float32MultiArray res;
 
 
 class KeyboardReader final
@@ -255,7 +255,8 @@ int main(int argc, char **argv)
   TurtleBotTeleop teleop_turtle(node);
 
   res.data.clear();
-
+  res.data.push_back(linear);
+  res.data.push_back(1angular);
 
   teleop_turtle.keyLoop(linear, angular);
 
