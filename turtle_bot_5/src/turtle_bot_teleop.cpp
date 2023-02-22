@@ -256,7 +256,7 @@ int main(int argc, char **argv)
 
   res.data.clear();
   res.data.push_back(linear);
-  res.data.push_back(1angular);
+  res.data.push_back(angular);
 
   teleop_turtle.keyLoop(linear, angular);
 
