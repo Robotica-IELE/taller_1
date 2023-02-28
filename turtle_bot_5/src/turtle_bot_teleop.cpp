@@ -11,7 +11,7 @@
 
 
 #include <signal.h>
-/*Paquete usado para imprimir slaidas de datos*/
+/*Paquete usado para imprimir salidas de datos*/
 #include <stdio.h>
 #ifdef _WIN32
 # include <windows.h>
@@ -32,7 +32,7 @@ static constexpr char KEYCODE_DOWN = 0x42;
 static constexpr char KEYCODE_Q = 0x71;
 
 bool running = true;
-/*Mensaje de tipo float usado para el path*/
+/*Mensaje de tipo float usado para el txt que se guardara en el path*/
 turtle_bot_5::msg::Float32MultiArray res;
 
 
