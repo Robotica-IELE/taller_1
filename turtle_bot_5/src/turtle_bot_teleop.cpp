@@ -87,12 +87,13 @@ public:
     DWORD num_read;
     switch (WaitForSingleObject(hstdin_, 100))
     {
+        /*Revisa el caso para el cual se queda esperando respuesta y no se genera*/
     case WAIT_OBJECT_0:
       if (!ReadConsoleInput(hstdin_, &record, 1, &num_read))
       {
         throw std::runtime_error("Read failed");
       }
-
+      /*Revisa que evento ha sido seleccionado de tal forma que se guarda en el char la tecla seleccionada*/
       if (record.EventType != KEY_EVENT || !record.Event.KeyEvent.bKeyDown) {
         break;
       }
@@ -151,11 +152,11 @@ private:
   struct termios cooked_;
 #endif
 };
-
+/*CReaci'on de la clase turtleteleop con funciones propias para lectura, asignacion de variables*/
 class TurtleBotTeleop final
 {
 public:
-/*Declara el nodo del movimiento para ROS*/
+/*Declara el nodo del movimiento para ROS seg'un el parametro entregado 'rclcpp::Node::SharedPtr nh'*/
   TurtleBotTeleop(rclcpp::Node::SharedPtr nh)
   {
     rclcpp::Node::SharedPtr nh_ = nh;
@@ -166,6 +167,7 @@ public:
   int keyLoop(float p_linear, float p_angular)
   {
     char c;
+    /*MUESTRA mensaje en la consola para que el usuario sepa que se et'a ejecutando el loop de lectura de datos de las teclas*/
 
     puts("---------------------------");
     puts("\nReading from keyboard");
