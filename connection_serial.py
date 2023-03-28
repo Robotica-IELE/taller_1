@@ -39,15 +39,15 @@ class MinimalSubscriber(Node):
 
 
     def listener_callback(self, msg):
-    
-    	if(ms.angular.z == 1.0)
-        comando = "4"
-    elif(ms.angula.z == -1.0)
-        comado = "3"
-    elif(ms.linear.x == 1.0)
-        comando = "1"
-     elif(ms.linear.x == -1.0)
-        comando = "2"
+        comando = "0"
+        if(ms.angular.z == 1.0):
+            comando = "4"
+        elif(ms.angula.z == -1.0):
+            comado = "3"
+        elif(ms.linear.x == 1.0):
+            comando = "1"
+        elif(ms.linear.x == -1.0):
+            comando = "2"
         comando = comando + "\n"
         comandoBytes = comando.encode()
         ser.write(comandoBytes)
