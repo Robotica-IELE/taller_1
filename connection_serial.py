@@ -42,7 +42,7 @@ class MinimalSubscriber(Node):
         comando = "0"
         if(msg.angular.z == 1.0):
             comando = "4"
-        elif(msg.angula.z == -1.0):
+        elif(msg.angular.z == -1.0):
             comado = "3"
         elif(msg.linear.x == 1.0):
             comando = "1"
