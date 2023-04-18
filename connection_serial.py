@@ -35,24 +35,25 @@ class MinimalSubscriber(Node):
             Twist,
             '/cmdVel',
             self.listener_callback,
-            10)
+            8)
 
 
     def listener_callback(self, msg):
-        comando = "0"
         if(msg.angular.z == 1.0):
-            comando = "4"
+            comando = "3"
         elif(msg.angular.z == -1.0):
-            comado = "3"
+            comando = "4"
         elif(msg.linear.x == 1.0):
             comando = "1"
         elif(msg.linear.x == -1.0):
             comando = "2"
+        else:
+            comando = "0"
         comando = comando + "\n"
         comandoBytes = comando.encode()
         ser.write(comandoBytes)
-        time.sleep(0.2)
         self.get_logger().info(comando)
+       
 
 
             
