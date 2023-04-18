@@ -1,73 +1,200 @@
 #!/usr/bin/env python3
-import rclpy
-import time
-import serial
-from rclpy.node import Node
-from geometry_msgs.msg import Twist 
+int ENA = 2;
+int IN1 = 3;
+int IN2 = 4;
+int IN3 = 5;    // 
+int IN4 = 6;    
+int ENB = 7;  
 
- #Modificar el puerto serie de ser necesario
+int t = 100;
+//
+String inputString = "";
+int velMotor1 = 60;//izquierda
+int velMotor2 = 60;//derecha
+int velMotor1A = 60;//izquierda
+int velMotor2A = 60;
+int velx;
+bool stringComplete = false;
+bool stringCompleteA = false;
+bool stringCompleteL = false;
+//
 
-# try:
-#     while True:
-#         comando = input("Ingresa r comando (on/off): ") #Modificar esto que es el mensaje que se envia al arduino
-#         comando = comando + "\n"
-#         comandoBytes = comando.encode()
-#         ser.write(comandoBytes)
-#         time.sleep(0.1)
-#         read = ser.readline()
-#         print(read)
+void setup()
+{
+  //
+ Serial.begin(115200);
+ inputString.reserve(200);
+ //
+ pinMode (ENA, OUTPUT);
+ pinMode (ENB, OUTPUT); 
+ pinMode (IN3, OUTPUT);
+ pinMode (IN4, OUTPUT);
+ pinMode (IN1, OUTPUT);
+ pinMode (IN2, OUTPUT);
+}
 
-# except KeyboardInterrupt:
-#     print("\nInterrupcion por teclado")
-# except ValueError as ve:
-#     print(ve)
-#     print("Otra interrupcion")
-# finally:
-#     ser.close()
+void loop()
+{ 
+  serialEvent(); 
+  Leer();
+  //Quieto();
+  //Derecha();
+  //Izquierda();
+  //Atras();
+  //Adelante();
+  
+  //analogWrite(ENA,105);
+  //analogWrite(ENB,105);
+  delay(t);
+  Quieto();
+}
 
-# Nodo de la aplicacion.
-ser = serial.Serial("/dev/ttyACM0", baudrate=115200)
-
-class MinimalSubscriber(Node):
-    def __init__(self):
-        super().__init__('connectionSerial')
-        self.subscription = self.create_subscription(
-            Twist,
-            '/cmdVel',
-            self.listener_callback,
-            8)
-
-
-    def listener_callback(self, msg):
-        if(msg.angular.z == 1.0):
-            comando = "3"
-        elif(msg.angular.z == -1.0):
-            comando = "4"
-        elif(msg.linear.x == 1.0):
-            comando = "1"
-        elif(msg.linear.x == -1.0):
-            comando = "2"
-        else:
-            comando = "0"
-        comando = comando + "\n"
-        comandoBytes = comando.encode()
-        ser.write(comandoBytes)
-        self.get_logger().info(comando)
-       
+//Captura la velocidad
+void readVelocidad()
+{
+  velx = Serial.readStringUntil("$").toInt();
+  velMotor1 = 95.968*velx-142.1;
+  velMotor2 = 96.706*velx-141.82;
+}
 
 
-            
-def main(args=None):
-    rclpy.init(args=args)
+//Comunicación con la raspberry
+void Leer()
+{
+  if (stringCompleteL)
+  {
+    velx = inputString.toFloat();
+    velMotor1 = round(95.968*velx-142.1);
+    velMotor2 = round(96.706*velx-141.82);
+    inputString = "";
+    stringCompleteL = false;
+  }
+  if (stringCompleteA)
+  {
+    velx = inputString.toFloat();
+    velMotor1A = round((95.968*velx-142.1)/(0.18));
+    velMotor2A = round((96.706*velx-141.82)/(0.18));
+    inputString = "";
+    stringCompleteA = false;
+  }
 
-    # Thread encargado de la interfaz.
+  if (stringComplete)
+  {
+    if (inputString.equals("3"))
+    {
+      Izquierda();
+    } 
+    else if (inputString.equals("4"))
+    {
+      Derecha();
+    }
+    else if (inputString.equals("1"))
+    {
+      Adelante();
+    }
+    else if (inputString.equals("2"))
+    {
+      Atras();
+    }
+    else if (inputString.equals("0"))
+    {
+      Quieto();
+    }
+    inputString = "";
+    stringComplete = false;
+    Serial.print(velMotor1);
+    Serial.print("\n");
+  }
+}
 
-    # Proceso principal encargado de recibir las posiciones "(x, y)"
-    minimal_subscriber= MinimalSubscriber()
-    rclpy.spin(minimal_subscriber)
-    ser.close()
-    minimal_subscriber.destroy_node()
-    rclpy.shutdown()
+//
 
-if __name__ == '__main__':
-    main()
+void serialEvent() {
+  
+  while (Serial.available()) {//Mientras tengamos caracteres disponibles en el buffer
+    char inChar = (char)Serial.read();//Leemos el siguiente caracter
+    if (inChar == '\n') {//Si el caracter recibido corresponde a un salto de línea
+      stringComplete = true;//Levantamos la bandera 
+    }
+    else if (inChar == 'A') {//Si el caracter recibido corresponde a un salto de línea
+      stringCompleteA = true;//Levantamos la bandera 
+    }
+    else if (inChar == 'L') {//Si el caracter recibido corresponde a un salto de línea
+      stringCompleteL = true;//Levantamos la bandera 
+    }
+    else{//Si el caracter recibido no corresponde a un salto de línea
+      inputString += inChar;//Agregamos el caracter a la cadena 
+    }
+  }
+}
+//
+
+void Derecha() 
+{
+  //Para ir hacia adelante se usa [0110]
+  digitalWrite (IN1, LOW);
+  digitalWrite (IN2, HIGH);
+  
+  digitalWrite (IN3, LOW);
+  digitalWrite (IN4, LOW);
+
+  analogWrite(ENA,velMotor1);
+  analogWrite(ENB,velMotor2);
+  //delay(500);
+}
+
+void Quieto() 
+{
+  //Para ir hacia adelante se usa [0110]
+  digitalWrite (IN1, LOW);
+  digitalWrite (IN2, LOW);
+  
+  digitalWrite (IN3, LOW);
+  digitalWrite (IN4, LOW);
+
+  analogWrite(ENA,velMotor1);
+  analogWrite(ENB,velMotor2);
+  //delay(500);
+}
+
+void Izquierda() 
+{
+  //Para ir hacia atras se usa [1001]
+  digitalWrite (IN1, LOW);
+  digitalWrite (IN2, LOW);
+  
+  digitalWrite (IN3, LOW);
+  digitalWrite (IN4, HIGH);
+
+  analogWrite(ENA,velMotor1);
+  analogWrite(ENB,velMotor2);
+  //delay(500);
+}
+void Atras() 
+{
+  //Para ir hacia la derecha se usa [1001]
+  digitalWrite (IN1, HIGH);
+  digitalWrite (IN2, LOW);
+  
+  digitalWrite (IN3, HIGH);
+  digitalWrite (IN4, LOW);
+
+  analogWrite(ENA,velMotor1);
+  analogWrite(ENB,velMotor2);
+  //delay(500);
+}
+void Adelante() 
+{
+  //Para ir hacia adelante se usa [1001]
+  digitalWrite (IN1, LOW);
+  digitalWrite (IN2, HIGH);
+  
+  digitalWrite (IN3, LOW);
+  digitalWrite (IN4, HIGH);
+
+  analogWrite(ENB,velMotor2);
+
+  analogWrite(ENA,velMotor1);
+  
+  //delay(500);
+}
