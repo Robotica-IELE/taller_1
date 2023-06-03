@@ -1,0 +1,70 @@
+#include <Servo.h>
+
+Servo servo1;
+Servo servo2;
+Servo servo3;
+Servo motorID ;
+void setup() {
+  Serial.begin(115200);
+  servo1.attach(2);
+  servo2.attach(9);
+  servo3.attach(10);
+}
+
+const int maxValues = 3; // Define la cantidad máxima de valores que deseas guardar
+String values[maxValues]; // Crea un array de Strings para guardar los valores
+int index = 0; // Variable para llevar la cuenta del índice
+
+void loop() {
+  if (Serial.available()) {
+    String receivedString = Serial.readStringUntil('\n'); // Lee el string recibido hasta encontrar un salto de línea
+    
+    char charArray[receivedString.length() + 1]; // Crea un array de caracteres
+    receivedString.toCharArray(charArray, sizeof(charArray)); // Convierte el string en un array de caracteres
+    
+    char* token = strtok(charArray, ","); // Separa el string en tokens utilizando la coma como delimitador
+    
+    index = 0; // Reinicia el índice
+    
+    while (token != NULL && index < maxValues) {
+      String value = String(token); // Convierte cada token en un String
+      values[index] = value; // Guarda el valor en el array
+      index++; // Incrementa el índice
+      token = strtok(NULL, ","); // Obtiene el siguiente token
+    }
+    
+    // Imprime los valores guardados en el array
+    for (int i = 0; i < index; i++) {
+      //Serial.println(values[i]);
+    }
+    //Serial.println(values[1]);// va en 0,1,2 y asi sucesivamente
+    int name1 = values[0].toInt();
+    motorAsignado(name1);
+    //Serial.println("Finaliza setup, motor:");
+    //Serial.println(name1);
+
+    float angulo =values[1].toFloat();
+    //Serial.println(angulo);
+    movementMotor(angulo);
+  }
+
+}
+
+void movementMotor(float value){
+
+  Serial.println("entro al movement:");
+  motorID.write(value);
+  
+}
+void motorAsignado(int nombre){
+  if (nombre == 1){
+    motorID = servo1;
+  }
+  else if (nombre == 2){
+    motorID = servo2;
+  }
+  else if (nombre == 3){
+    motorID = servo3;
+  }
+  
+}
