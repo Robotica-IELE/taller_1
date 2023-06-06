@@ -1,0 +1,60 @@
+import cv2
+import numpy as np
+
+image_path = "panel.jpeg"
+
+# Cargar la imagen
+image = cv2.imread(image_path)
+
+# Convertir la imagen a espacio de color HSV
+hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+# Obtener las dimensiones de la imagen
+height, width, _ = image.shape
+
+# Calcular las coordenadas del centro de la imagen
+cx = int(50 * width / 100)
+cy = int(80 * height / 100)
+
+# Obtener el valor de tonalidad (hue) del píxel central
+pixel_center = hsv_image[cy, cx]
+hue_value = pixel_center[0]
+
+# Determinar el color basado en el valor de tonalidad
+color = "Indefinido"
+if hue_value < 5:
+    color = "Rojo"
+elif hue_value < 20:
+    color = "Naranja"
+elif hue_value < 33:
+    color = "Amarillo"
+elif hue_value < 78:
+    color = "Verde"
+elif hue_value < 131:
+    color = "Azul"
+elif hue_value < 170:
+    color = "Morado"
+
+# Imprimir el valor del píxel central
+print(pixel_center)
+
+# Dibujar un rectángulo alrededor de los elementos del color determinado
+if color != "Indefinido":
+    lowerb = np.array([max(0, hue_value - 10), 50, 50], dtype=np.uint8)
+    upperb = np.array([min(179, hue_value + 10), 255, 255], dtype=np.uint8)
+    mask = cv2.inRange(hsv_image, lowerb, upperb)
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    for contour in contours:
+        (x, y, w, h) = cv2.boundingRect(contour)
+        cv2.rectangle(image, (x, y), (x + w, y + h), (255, 0, 0), 2)
+
+# Dibujar el nombre del color en la imagen
+cv2.putText(image, color, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+
+# Dibujar un círculo en el centro de la imagen
+cv2.circle(image, (cx, cy), 5, (255, 0, 0), 3)
+
+# Mostrar la imagen resultante
+cv2.imshow("image", image)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
